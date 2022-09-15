@@ -1,0 +1,45 @@
+version: '2'
+networks:
+  datum-desafio-backend:
+    external: true
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: datum-desafio
+    container_name: datum-desafio-web
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - datum-desafio-backend
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: datum-desafio-nginx
+    restart: unless-stopped
+    ports:
+      - 8080:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+    networks:
+      - datum-desafio-backend
+  db:
+    image: mysql/mysql-server:8.0.23
+    container_name: datum-desafio-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - datum-desafio-backend
+    ports:
+      - 3306:3306
